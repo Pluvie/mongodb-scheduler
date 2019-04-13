@@ -1,6 +1,14 @@
+class FailingExecutableClass < Scheduler::Examples::ExecutableClass
+  def call(*args)
+    @job.progress! 25
+    @job.error!('Example of error.')
+    @job.progress! 50
+  end
+end
+
 RSpec.describe Scheduler::Examples::SchedulableModel do
 
-  before do
+  after do
     Scheduler.configuration.job_class.delete_all
   end
 
@@ -76,20 +84,13 @@ RSpec.describe Scheduler::Examples::SchedulableModel do
 
   end
 
-  # context "when it is set to perform" do
-
-  #   it "creates an instance of the resource class" do
-  #     resource = described_class.new job_attributes
-  #     resource.perform
-  #     expect(described_class.find(resource.id)).to_not be nil
-  #   end
-
-  #   it "calls the instanced job 'call' method" do
-  #     resource = described_class.new job_attributes
-  #     resource.perform
-  #     expect(resource.reload.status).to be :completed
-  #   end
-
-  # end
+  context "when it executes a failing class" do
+    it "immediately stops execution if an error is thrown" do
+      resource = described_class.new job_attributes.merge executable_class: 'FailingExecutableClass'
+      resource.perform
+      expect(resource.reload.status).to be :error
+      expect(resource.reload.progress).to be 25.0
+    end
+  end
 
 end

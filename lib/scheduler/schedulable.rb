@@ -131,7 +131,9 @@ module Scheduler
             "sure to implement it before performing the job." unless job.respond_to? :call
           self.status!(:running)
           self.update(pid: pid) if pid.present?
-          job.call(*self.args)
+          catch :error do
+            job.call(*self.args)
+          end
           self.completed_at = Time.current
           if self.status == :running
             self.progress!(100)
@@ -164,6 +166,16 @@ module Scheduler
         # @param [Float] amount the given progress amount.
         def progress_by!(amount)
           self.update(progress: progress + amount.to_f) if amount.numeric?
+        end
+
+        ##
+        # Immediately stops job execution and logs the error.
+        #
+        # @param [String] message the error message.
+        def error!(message)
+          self.log :error, message
+          self.status! :error
+          throw :error
         end
 
         ##

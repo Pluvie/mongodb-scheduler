@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mongodb-scheduler (0.1.0)
+    mongodb-scheduler (0.2.0)
       bson_ext
       hanami-cli
       hanami-mongoid
