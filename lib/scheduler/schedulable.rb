@@ -126,12 +126,12 @@ module Scheduler
         #
         # @return [Object] the instanced executable_class.
         def perform(pid = nil)
-          job = self.executable_class.new(*self.args)
+          job = self.executable_class.new(self)
           raise Scheduler::Error.new "#{self.executable_class} does not implement method 'call'. Please make "\
             "sure to implement it before performing the job." unless job.respond_to? :call
           self.status!(:running)
           self.update(pid: pid) if pid.present?
-          job.call(self)
+          job.call(*self.args)
           self.completed_at = Time.current
           if self.status == :running
             self.progress!(100)

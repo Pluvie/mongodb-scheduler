@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    scheduler (0.1.0)
+    mongodb-scheduler (0.1.0)
       bson_ext
       hanami-cli
       hanami-mongoid
@@ -65,9 +65,9 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 2.0)
+  mongodb-scheduler!
   rake (~> 10.0)
   rspec (~> 3.0)
-  scheduler!
 
 BUNDLED WITH
    2.0.1

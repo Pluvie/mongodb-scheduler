@@ -2,11 +2,12 @@ module Scheduler
   module Examples
     class ExecutableClass
 
-      def initialize(*args)
+      def initialize(job)
+        @job = job
       end
 
-      def call(job)
-        job.log :info, 'Example of execution.'
+      def call(*args)
+        @job.log :info, 'Example of execution.'
       end
     end
   end

@@ -23,7 +23,8 @@ $ scheduler restart
 A `Scheduler` is a process that keeps running looking for jobs to perform. The jobs are documents of a specific collection that you can specify in the scheduler configuration file. You can specify your own model to act as a schedulable entity, as long as it includes the `Schedulable` module. The other configuration options are explained in the template file `lib/scheduler/templates/scheduler.rb` file.
 
 As an example, the gem comes with a `Scheduler::Examples::SchedulableModel` which is a bare class that just includes the `Scheduler::Schedulable` module, and also an `Scheduler::Examples::ExecutableClass` class which is a bare implementation of an executable class.
-An executable class is just a plain Ruby class which must implement a `call` method which accepts one argument. This argument is an instance of the schedulable model that you configured.
+An executable class is just a plain Ruby class which must implement a `call` method which accepts the same arguments that you passed to the schedulable model attribute `args`.
+Also, the executable class, must have the first argument of its `initialize` method to accept the current instance of the schedulable model.
 
 First start by running the scheduler:
 ```bash
