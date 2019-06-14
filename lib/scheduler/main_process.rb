@@ -18,6 +18,7 @@ module Scheduler
     #
     # @return [Scheduler::MainProcess] the created MainProcess.
     def initialize
+      Mongoid.load! Scheduler.configuration.mongoid_config_file, Scheduler.configuration.environment
       @logger = Scheduler.logger
       @pid = Process.pid
       @job_class = Scheduler.configuration.job_class
@@ -103,7 +104,7 @@ module Scheduler
           # Waits the specified amount of time before next iteration
           sleep @polling_interval
         rescue StandardError => error
-          @logger.error Rainbow("[Scheduler:#{@pid}] Error #{e.class}: #{error.message}").red
+          @logger.error Rainbow("[Scheduler:#{@pid}] Error #{error.class}: #{error.message}").red
           @logger.error Rainbow(error.backtrace.join("\n")).red
         rescue SignalException => signal
           if signal.message.in? [ 'SIGINT', 'SIGTERM', 'SIGQUIT' ]

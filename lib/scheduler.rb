@@ -91,14 +91,14 @@ module Scheduler
       scheduler_pid = Process.fork do
         begin
           logger.info Rainbow("[Scheduler:#{Process.pid}] Forked.").cyan
-          Process.daemon(true)
+          Process.daemon true, true
           logger.info Rainbow("[Scheduler:#{Process.pid}] Going into background..").cyan
           File.open(self.pid_file, 'w+') do |pidfile|
             pidfile.puts Process.pid
           end
           scheduler = Scheduler::MainProcess.new
-        rescue StandardError => e
-          puts Rainbow("#{e.class}: #{e.message} (#{e.backtrace.first})").red
+        rescue StandardError => error
+          puts Rainbow("#{error.class}: #{error.message} (#{error.backtrace.first})").red
         end
       end
       Process.detach(scheduler_pid)
