@@ -49,7 +49,7 @@ module Scheduler
     # @return [nil]
     def start_loop
       loop do
-        begin          
+        begin
           # Counts jobs to schedule.
           running_jobs = @job_class.running.entries
           schedulable_jobs = @job_class.queued.order_by(scheduled_at: :asc).entries
@@ -95,7 +95,7 @@ module Scheduler
                   Process.kill :QUIT, job.pid
                 rescue Errno::ENOENT, Errno::ESRCH
                 end
-                return true
+                next true
               end
             end
             false
