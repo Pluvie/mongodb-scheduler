@@ -137,6 +137,7 @@ module Scheduler
             end
           rescue StandardError => error
             self.status!(:error)
+            self.log(:error, error.message)
           end
           self.completed_at = Time.current
           if self.status == :running
