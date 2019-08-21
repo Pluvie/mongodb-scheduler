@@ -131,8 +131,12 @@ module Scheduler
             "sure to implement it before performing the job." unless job.respond_to? :call
           self.status!(:running)
           self.update(pid: pid) if pid.present?
-          catch :error do
-            job.call(*self.args)
+          begin
+            catch :error do
+              job.call(*self.args)
+            end
+          rescue StandardError => error
+            self.status!(:error)
           end
           self.completed_at = Time.current
           if self.status == :running
