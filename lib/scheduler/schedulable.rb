@@ -111,12 +111,11 @@ module Scheduler
           self.unset(:completed_at)
           self.unset(:executed_at)
           self.save
-          if block_given?
-            yield self
-          else self end
-          if Scheduler.perform_jobs_in_test_or_development?
-            self.perform
-          end
+
+          yield self if block_given?
+          self.perform if Scheduler.perform_jobs_in_test_or_development?
+
+          self
         end
 
         ##
@@ -144,6 +143,7 @@ module Scheduler
             self.progress!(100)
             self.status!(:completed)
           end
+
           self
         end
 
