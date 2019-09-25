@@ -98,12 +98,12 @@ module Scheduler
         end
 
         ##
-        # Schedules the job.
+        # Resets the job data.
         #
         # @return [Object] itself.
-        def schedule
-          self.scheduled_at = Time.current
+        def reset
           self.status = :queued
+          self.scheduled_at = Time.current
           self.logs = []
           self.progress = 0.0
           self.unset(:error)
@@ -111,6 +111,14 @@ module Scheduler
           self.unset(:completed_at)
           self.unset(:executed_at)
           self.save
+        end
+
+        ##
+        # Schedules the job.
+        #
+        # @return [Object] itself.
+        def schedule
+          self.reset
 
           yield self if block_given?
           self.perform if Scheduler.perform_jobs_in_test_or_development?
@@ -122,9 +130,12 @@ module Scheduler
         # Performs the job.
         #
         # @param [Integer] pid the executing pid.
+        # @param [Boolean] reset whether to reset job data before performing.
         #
         # @return [Object] the instanced executable_class.
-        def perform(pid = nil)
+        def perform(pid = nil, reset = false)
+          self.reset if reset
+
           job = self.executable_class.new(self)
           raise Scheduler::Error.new "#{self.executable_class} does not implement method 'call'. Please make "\
             "sure to implement it before performing the job." unless job.respond_to? :call
@@ -137,6 +148,7 @@ module Scheduler
           rescue StandardError => error
             self.status!(:error)
             self.log(:error, error.message)
+            self.log(:error, error.backtrace.join("\n"))
           end
           self.completed_at = Time.current
           if self.status == :running
