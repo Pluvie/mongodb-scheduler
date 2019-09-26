@@ -102,7 +102,6 @@ module Scheduler
         #
         # @return [Object] itself.
         def reset
-          self.status = :queued
           self.scheduled_at = Time.current
           self.logs = []
           self.progress = 0.0
@@ -111,6 +110,8 @@ module Scheduler
           self.unset(:completed_at)
           self.unset(:executed_at)
           self.save
+
+          self
         end
 
         ##
@@ -118,6 +119,7 @@ module Scheduler
         #
         # @return [Object] itself.
         def schedule
+          self.status = :queued
           self.reset
 
           yield self if block_given?
