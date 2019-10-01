@@ -145,7 +145,11 @@ module Scheduler
           self.update(pid: pid) if pid.present?
           begin
             catch :error do
-              job.call(*self.args)
+              if self.args.last.is_a? Hash
+                job.call(*self.args.first(self.args.size - 1), **self.args.last.symbolize_keys)
+              else
+                job.call(*self.args)
+              end
             end
           rescue StandardError => error
             self.status!(:error)
