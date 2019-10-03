@@ -52,13 +52,14 @@ module Scheduler
         begin
           # Counts jobs to schedule.
           running_jobs = @job_class.running.entries
-          schedulable_jobs = @job_class.queued.order_by(scheduled_at: :asc).entries
+          scheduled_jobs = @job_class.queued.order_by(scheduled_at: :asc).entries
+          performable_jobs = scheduled_jobs.select { |job| job.run_at <= Time.now }
           jobs_to_schedule = @max_concurrent_jobs - running_jobs.count
           jobs_to_schedule = 0 if jobs_to_schedule < 0
   
           # Finds out scheduled jobs waiting to be performed.
-          scheduled_jobs = []
-          schedulable_jobs.first(jobs_to_schedule).each do |job|
+          performed_jobs = []
+          performable_jobs.first(jobs_to_schedule).each do |job|
             job_pid = Process.fork do
               begin
                 job.perform(Process.pid)
@@ -68,20 +69,21 @@ module Scheduler
               end
             end
             Process.detach(job_pid)
-            scheduled_jobs << job
+            performed_jobs << job
             @queue << job.id.to_s
           end
   
           # Logs launched jobs
-          if scheduled_jobs.any?
-            @logger.info Rainbow("[Scheduler:#{@pid}] Launched #{scheduled_jobs.count} "\
-              "jobs: #{scheduled_jobs.map(&:id).map(&:to_s).join(', ')}.").cyan
+          if performed_jobs.any?
+            @logger.info Rainbow("[Scheduler:#{@pid}] Launched #{performed_jobs.count} "\
+              "jobs: #{performed_jobs.map(&:id).map(&:to_s).join(', ')}.").cyan
           else
-            if schedulable_jobs.count == 0
-              @logger.info Rainbow("[Scheduler:#{@pid}] No jobs in queue.").cyan
+            if performable_jobs.count == 0
+              @logger.info Rainbow("[Scheduler:#{@pid}] No jobs launched, "\
+                "#{scheduled_jobs.count} in queue waiting to be performed.").cyan
             else
               @logger.warn Rainbow("[Scheduler:#{@pid}] No jobs launched, reached maximum "\
-                "number of concurrent jobs. Jobs in queue: #{schedulable_jobs.count}.").yellow
+                "number of concurrent jobs. Jobs in queue: #{performable_jobs.count}.").yellow
             end
           end
   

@@ -9,12 +9,36 @@ module Scheduler
     # Possible log levels.
     LOG_LEVELS = [ :debug, :info, :warn, :error ]
 
+    ##
+    # A class to delay jobs.
+    class Delayed
+
+      ##
+      # New delayed job.
+      def initialize(job_class, time)
+        @job_class = job_class
+        @time = time
+      end
+
+      ##
+      # Creates an instance of this class and schedules the job.
+      #
+      # @param [String] executable_class the class of the job to run.
+      # @param [Array] *job_args job arguments
+      #
+      # @return [Object] the created job.
+      def schedule(executable_class, *job_args)
+        @job_class.create(executable_class: executable_class, args: job_args, run_at: Time.now + @time).schedule
+      end
+    end
+
     def self.included(base)
       base.class_eval do
         include Mongoid::Document
 
         field :executable_class,        type: String
         field :args,                    type: Array,      default: []
+        field :run_at,                  type: DateTime,   default: Time.now
         field :scheduled_at,            type: DateTime
         field :executed_at,             type: DateTime
         field :completed_at,            type: DateTime
@@ -74,6 +98,16 @@ module Scheduler
           # @return [Object] the created job.
           def schedule(executable_class, *job_args)
             self.create(executable_class: executable_class, args: job_args).schedule
+          end
+
+          ##
+          # Creates an instance of this class and schedules the job after the amount of given time.
+          #
+          # @param [Integer] time the amount of time to wait.
+          #
+          # @return [Object] the created job.
+          def in(time)
+            Scheduler::Schedulable::Delayed.new(self, time)
           end
 
           ##
